@@ -236,6 +236,12 @@
             align-items: center;
         }
         
+        .server-identifier {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
         @media print {
             .no-print {
                 display: none !important;
@@ -354,7 +360,7 @@
                 <div class="col-md-8">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
-                        <input type="text" class="form-control" id="searchInput" placeholder="Search by server name...">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search by server model or identifier...">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -381,7 +387,8 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Server Name</th>
+                                <th>Server Model</th>
+                                <th>Server Identifier</th>
                                 <th>Company</th>
                                 <th>Branch</th>
                                 <th>Drive Health</th>
@@ -433,7 +440,8 @@
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Server Name</th>
+                                <th>Server Model</th>
+                                <th>Server Identifier</th>
                                 <th>Company</th>
                                 <th>Branch</th>
                                 <th>Drive Health</th>
@@ -484,11 +492,17 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Server Name</label>
-                            <input type="text" class="form-control" id="serverName" required>
+                            <label class="form-label">Server Model</label>
+                            <input type="text" class="form-control" id="serverModel" required placeholder="e.g., Dell PowerEdge R740">
+                            <div class="form-text">Enter the server model (same models can be recorded multiple times)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Server Identifier</label>
+                            <input type="text" class="form-control" id="serverIdentifier" required placeholder="e.g., SRV-BAL-001, Server Room Rack 1">
+                            <div class="form-text">Unique identifier for this specific server (location, serial number, etc.)</div>
                             <div class="duplicate-warning" id="duplicateWarning">
                                 <i class="fas fa-exclamation-triangle me-1"></i>
-                                This server already exists. Editing will update the existing record.
+                                A server with this identifier already exists. Editing will update the existing record.
                             </div>
                         </div>
                         
@@ -631,7 +645,8 @@
         let servers = JSON.parse(localStorage.getItem('serverSurveyData')) || [
             {
                 id: 1,
-                serverName: "SRV-BAL-001",
+                serverModel: "Dell PowerEdge R740",
+                serverIdentifier: "SRV-BAL-001",
                 company: "balmain",
                 branch: "Gweru",
                 driveHealth: {
@@ -650,7 +665,8 @@
             },
             {
                 id: 2,
-                serverName: "SRV-NOR-002",
+                serverModel: "HP ProLiant DL380",
+                serverIdentifier: "SRV-NOR-002",
                 company: "norich",
                 branch: "Bulawayo",
                 driveHealth: {
@@ -673,7 +689,8 @@
             },
             {
                 id: 3,
-                serverName: "SRV-NRM-003",
+                serverModel: "Dell PowerEdge R740",
+                serverIdentifier: "SRV-NRM-003",
                 company: "nrm",
                 branch: "Masvingo CC",
                 driveHealth: {
@@ -721,7 +738,8 @@
         const saveServerBtn = document.getElementById('saveServer');
         const companySelect = document.getElementById('company');
         const branchSelect = document.getElementById('branch');
-        const serverNameInput = document.getElementById('serverName');
+        const serverModelInput = document.getElementById('serverModel');
+        const serverIdentifierInput = document.getElementById('serverIdentifier');
         const duplicateWarning = document.getElementById('duplicateWarning');
         const totalServersEl = document.getElementById('totalServers');
         const healthyServersEl = document.getElementById('healthyServers');
@@ -831,19 +849,19 @@
 
         // Setup duplicate detection
         function setupDuplicateDetection() {
-            serverNameInput.addEventListener('input', checkForDuplicate);
+            serverIdentifierInput.addEventListener('input', checkForDuplicate);
         }
 
-        // Check if server name already exists
+        // Check if server identifier already exists
         function checkForDuplicate() {
-            const serverName = serverNameInput.value.trim();
-            if (!serverName) {
+            const serverIdentifier = serverIdentifierInput.value.trim();
+            if (!serverIdentifier) {
                 duplicateWarning.style.display = 'none';
                 return;
             }
 
             const existingServer = servers.find(server => 
-                server.serverName.toLowerCase() === serverName.toLowerCase()
+                server.serverIdentifier.toLowerCase() === serverIdentifier.toLowerCase()
             );
 
             if (existingServer) {
@@ -935,7 +953,7 @@
             serverTableBody.innerHTML = '';
             
             if (serversToRender.length === 0) {
-                serverTableBody.innerHTML = '<tr><td colspan="9" class="text-center">No servers found matching your criteria</td></tr>';
+                serverTableBody.innerHTML = '<tr><td colspan="10" class="text-center">No servers found matching your criteria</td></tr>';
                 return;
             }
             
@@ -948,7 +966,12 @@
                 const row = document.createElement('tr');
                 row.className = getServerRowClass(server);
                 row.innerHTML = `
-                    <td>${server.serverName}</td>
+                    <td>
+                        <div>${server.serverModel}</div>
+                    </td>
+                    <td>
+                        <div>${server.serverIdentifier}</div>
+                    </td>
                     <td>${formatCompanyName(server.company)}</td>
                     <td>${server.branch}</td>
                     <td>
@@ -1015,7 +1038,7 @@
             historyTableBody.innerHTML = '';
             
             if (history.length === 0) {
-                historyTableBody.innerHTML = '<tr><td colspan="9" class="text-center">No history records found</td></tr>';
+                historyTableBody.innerHTML = '<tr><td colspan="10" class="text-center">No history records found</td></tr>';
                 return;
             }
             
@@ -1029,7 +1052,8 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${record.date}</td>
-                    <td>${record.serverName}</td>
+                    <td>${record.serverModel}</td>
+                    <td>${record.serverIdentifier}</td>
                     <td>${formatCompanyName(record.company)}</td>
                     <td>${record.branch}</td>
                     <td>
@@ -1101,7 +1125,8 @@
                 // Add server info to each active issue
                 activeIssues.forEach(issue => {
                     allIssues.push({
-                        server: server.serverName,
+                        server: server.serverModel,
+                        identifier: server.serverIdentifier,
                         branch: server.branch,
                         company: server.company,
                         issue: issue.description,
@@ -1117,7 +1142,8 @@
                     const resolvedIssues = server.resolvedIssues;
                     resolvedIssues.forEach(issue => {
                         allIssues.push({
-                            server: server.serverName,
+                            server: server.serverModel,
+                            identifier: server.serverIdentifier,
                             branch: server.branch,
                             company: server.company,
                             issue: issue.description,
@@ -1160,7 +1186,7 @@
                 issueItem.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
-                            <h6>${issue.server} <small class="text-muted">- ${issue.branch} (${formatCompanyName(issue.company)})</small></h6>
+                            <h6>${issue.server} <small class="text-muted">- ${issue.identifier} (${issue.branch}, ${formatCompanyName(issue.company)})</small></h6>
                             <p class="mb-1">${issue.issue}</p>
                             <small class="text-muted">Reported: ${issue.date}</small>
                             ${issue.resolved ? `<br><small class="text-success">Resolved: ${issue.resolvedDate}</small>` : ''}
@@ -1218,7 +1244,8 @@
             
             // Add resolution to history
             history.push({
-                serverName: server.serverName,
+                serverModel: server.serverModel,
+                serverIdentifier: server.serverIdentifier,
                 company: server.company,
                 branch: server.branch,
                 driveHealth: server.driveHealth,
@@ -1267,7 +1294,11 @@
                 if (antivirus && server.antivirusStatus !== antivirus) return false;
                 
                 // Filter by search term
-                if (searchTerm && !server.serverName.toLowerCase().includes(searchTerm)) return false;
+                if (searchTerm && 
+                    !server.serverModel.toLowerCase().includes(searchTerm) && 
+                    !server.serverIdentifier.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
                 
                 return true;
             });
@@ -1330,7 +1361,8 @@
             if (!server) return;
             
             document.getElementById('modalTitle').textContent = 'Update Server Survey';
-            document.getElementById('serverName').value = server.serverName;
+            document.getElementById('serverModel').value = server.serverModel;
+            document.getElementById('serverIdentifier').value = server.serverIdentifier;
             document.getElementById('company').value = server.company;
             populateBranchOptions();
             document.getElementById('branch').value = server.branch;
@@ -1389,7 +1421,8 @@
                 return;
             }
             
-            const serverName = document.getElementById('serverName').value.trim();
+            const serverModel = document.getElementById('serverModel').value.trim();
+            const serverIdentifier = document.getElementById('serverIdentifier').value.trim();
             const company = document.getElementById('company').value;
             const branch = document.getElementById('branch').value;
             const driveHealth = {
@@ -1405,14 +1438,14 @@
             const editId = serverForm.getAttribute('data-edit-id');
             const currentDate = new Date().toISOString().split('T')[0];
             
-            // Check for duplicate (case insensitive)
+            // Check for duplicate identifier (case insensitive)
             const existingServer = servers.find(server => 
-                server.serverName.toLowerCase() === serverName.toLowerCase() && 
+                server.serverIdentifier.toLowerCase() === serverIdentifier.toLowerCase() && 
                 (!editId || server.id !== parseInt(editId))
             );
             
             if (existingServer && !editId) {
-                alert('A server with this name already exists. Please use a different name or edit the existing server.');
+                alert('A server with this identifier already exists. Please use a different identifier or edit the existing server.');
                 return;
             }
             
@@ -1426,7 +1459,8 @@
                     // Update server
                     servers[index] = {
                         ...servers[index],
-                        serverName,
+                        serverModel,
+                        serverIdentifier,
                         company,
                         branch,
                         driveHealth,
@@ -1441,7 +1475,8 @@
                     
                     // Add to history
                     history.push({
-                        serverName,
+                        serverModel,
+                        serverIdentifier,
                         company,
                         branch,
                         driveHealth,
@@ -1458,7 +1493,8 @@
                 const newId = servers.length > 0 ? Math.max(...servers.map(s => s.id)) + 1 : 1;
                 const newServer = {
                     id: newId,
-                    serverName,
+                    serverModel,
+                    serverIdentifier,
                     company,
                     branch,
                     driveHealth,
@@ -1477,7 +1513,8 @@
                 
                 // Add to history
                 history.push({
-                    serverName,
+                    serverModel,
+                    serverIdentifier,
                     company,
                     branch,
                     driveHealth,
@@ -1574,7 +1611,8 @@
                 if (server) {
                     // Add deletion to history
                     history.push({
-                        serverName: server.serverName,
+                        serverModel: server.serverModel,
+                        serverIdentifier: server.serverIdentifier,
                         company: server.company,
                         branch: server.branch,
                         driveHealth: server.driveHealth,
@@ -1646,7 +1684,8 @@
                     <h2>Server Details</h2>
                     <table>
                         <tr>
-                            <th>Server Name</th>
+                            <th>Server Model</th>
+                            <th>Server Identifier</th>
                             <th>Company</th>
                             <th>Branch</th>
                             <th>Drive Health</th>
@@ -1664,7 +1703,8 @@
                 
                 printWindow.document.write(`
                     <tr>
-                        <td>${server.serverName}</td>
+                        <td>${server.serverModel}</td>
+                        <td>${server.serverIdentifier}</td>
                         <td>${formatCompanyName(server.company)}</td>
                         <td>${server.branch}</td>
                         <td>
@@ -1720,7 +1760,8 @@
             const tableData = servers.map(server => {
                 const status = getServerStatus(server);
                 return [
-                    server.serverName,
+                    server.serverModel,
+                    server.serverIdentifier,
                     formatCompanyName(server.company),
                     server.branch,
                     `C: ${server.driveHealth.c}d, D: ${server.driveHealth.d}d, E: ${server.driveHealth.e}d, F: ${server.driveHealth.f}d`,
@@ -1734,7 +1775,7 @@
             // Add detailed table
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 10,
-                head: [['Server Name', 'Company', 'Branch', 'Drive Health', 'UPS', 'Antivirus', 'Status', 'Comments']],
+                head: [['Server Model', 'Identifier', 'Company', 'Branch', 'Drive Health', 'UPS', 'Antivirus', 'Status', 'Comments']],
                 body: tableData,
                 theme: 'grid',
                 headStyles: { fillColor: [44, 62, 80] },
@@ -1742,12 +1783,13 @@
                 columnStyles: {
                     0: { cellWidth: 25 },
                     1: { cellWidth: 20 },
-                    2: { cellWidth: 25 },
-                    3: { cellWidth: 35 },
-                    4: { cellWidth: 15 },
-                    5: { cellWidth: 20 },
-                    6: { cellWidth: 15 },
-                    7: { cellWidth: 'auto' }
+                    2: { cellWidth: 20 },
+                    3: { cellWidth: 20 },
+                    4: { cellWidth: 30 },
+                    5: { cellWidth: 15 },
+                    6: { cellWidth: 20 },
+                    7: { cellWidth: 15 },
+                    8: { cellWidth: 'auto' }
                 }
             });
             
