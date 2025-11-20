@@ -6,6 +6,8 @@
     <title>SERVER SURVEY REPORT</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -178,7 +180,7 @@
             font-weight: 600;
         }
         
-        .drive-progress {
+        .drive-input {
             flex-grow: 1;
             margin: 0 15px;
         }
@@ -204,6 +206,10 @@
         .issue-item.resolved {
             border-left-color: var(--success-color);
             opacity: 0.7;
+        }
+        
+        .drive-days-input {
+            width: 100px;
         }
         
         @media print {
@@ -234,6 +240,9 @@
                 <div class="col-md-6 text-end">
                     <button class="btn btn-light me-2 no-print" id="printReport">
                         <i class="fas fa-print me-1"></i> Print Report
+                    </button>
+                    <button class="btn btn-light me-2 no-print" id="exportPDF">
+                        <i class="fas fa-file-pdf me-1"></i> Export PDF
                     </button>
                     <button class="btn btn-light no-print" id="addServerBtn">
                         <i class="fas fa-plus me-1"></i> Add Server
@@ -394,6 +403,8 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Server Name</th>
+                                <th>Company</th>
+                                <th>Branch</th>
                                 <th>Drive Health</th>
                                 <th>UPS Status</th>
                                 <th>Antivirus</th>
@@ -447,41 +458,41 @@
                         
                         <!-- Drive Health Section -->
                         <div class="drive-health-container">
-                            <h6>Drive Health</h6>
+                            <h6>Drive Health (Days Remaining)</h6>
                             <div class="drive-row">
                                 <div class="drive-label">C:</div>
-                                <div class="drive-progress">
-                                    <input type="range" class="form-range drive-slider" id="driveC" min="0" max="100" value="100">
+                                <div class="drive-input">
+                                    <input type="number" class="form-control drive-days-input" id="driveC" min="0" value="1000">
                                 </div>
                                 <div class="drive-status">
-                                    <span class="status-badge status-good" id="driveCStatus">100%</span>
+                                    <span class="status-badge status-good" id="driveCStatus">Healthy</span>
                                 </div>
                             </div>
                             <div class="drive-row">
                                 <div class="drive-label">D:</div>
-                                <div class="drive-progress">
-                                    <input type="range" class="form-range drive-slider" id="driveD" min="0" max="100" value="100">
+                                <div class="drive-input">
+                                    <input type="number" class="form-control drive-days-input" id="driveD" min="0" value="1000">
                                 </div>
                                 <div class="drive-status">
-                                    <span class="status-badge status-good" id="driveDStatus">100%</span>
+                                    <span class="status-badge status-good" id="driveDStatus">Healthy</span>
                                 </div>
                             </div>
                             <div class="drive-row">
                                 <div class="drive-label">E:</div>
-                                <div class="drive-progress">
-                                    <input type="range" class="form-range drive-slider" id="driveE" min="0" max="100" value="100">
+                                <div class="drive-input">
+                                    <input type="number" class="form-control drive-days-input" id="driveE" min="0" value="1000">
                                 </div>
                                 <div class="drive-status">
-                                    <span class="status-badge status-good" id="driveEStatus">100%</span>
+                                    <span class="status-badge status-good" id="driveEStatus">Healthy</span>
                                 </div>
                             </div>
                             <div class="drive-row">
                                 <div class="drive-label">F:</div>
-                                <div class="drive-progress">
-                                    <input type="range" class="form-range drive-slider" id="driveF" min="0" max="100" value="100">
+                                <div class="drive-input">
+                                    <input type="number" class="form-control drive-days-input" id="driveF" min="0" value="1000">
                                 </div>
                                 <div class="drive-status">
-                                    <span class="status-badge status-good" id="driveFStatus">100%</span>
+                                    <span class="status-badge status-good" id="driveFStatus">Healthy</span>
                                 </div>
                             </div>
                         </div>
@@ -553,10 +564,10 @@
                 company: "balmain",
                 branch: "Gweru",
                 driveHealth: {
-                    c: 85,
-                    d: 90,
-                    e: 75,
-                    f: 95
+                    c: 850,
+                    d: 920,
+                    e: 750,
+                    f: 950
                 },
                 upsStatus: "working",
                 antivirusStatus: "installed",
@@ -570,10 +581,10 @@
                 company: "norich",
                 branch: "Bulawayo",
                 driveHealth: {
-                    c: 45,
-                    d: 60,
-                    e: 30,
-                    f: 80
+                    c: 450,
+                    d: 600,
+                    e: 120,
+                    f: 800
                 },
                 upsStatus: "not-working",
                 antivirusStatus: "not-working",
@@ -587,16 +598,16 @@
                 company: "nrm",
                 branch: "Masvingo CC",
                 driveHealth: {
-                    c: 15,
-                    d: 40,
-                    e: 25,
-                    f: 70
+                    c: 80,
+                    d: 400,
+                    e: 200,
+                    f: 700
                 },
                 upsStatus: "working",
                 antivirusStatus: "not-installed",
                 comments: "Drive failure imminent. No antivirus installed.",
                 lastUpdated: "2023-05-13",
-                issues: ["Drive C: health critical", "Drive E: health critical", "Antivirus not installed"]
+                issues: ["Drive C: health critical", "Antivirus not installed"]
             }
         ];
 
@@ -615,6 +626,7 @@
         const resetFiltersBtn = document.getElementById('resetFilters');
         const addServerBtn = document.getElementById('addServerBtn');
         const printReportBtn = document.getElementById('printReport');
+        const exportPDFBtn = document.getElementById('exportPDF');
         const serverModal = new bootstrap.Modal(document.getElementById('serverModal'));
         const serverForm = document.getElementById('serverForm');
         const saveServerBtn = document.getElementById('saveServer');
@@ -639,7 +651,7 @@
             updateIssuesDashboard();
             setupEventListeners();
             populateBranchOptions();
-            setupDriveSliders();
+            setupDriveInputs();
         }
 
         // Set up event listeners
@@ -653,6 +665,7 @@
             addServerBtn.addEventListener('click', showAddServerModal);
             saveServerBtn.addEventListener('click', saveServer);
             printReportBtn.addEventListener('click', printReport);
+            exportPDFBtn.addEventListener('click', exportToPDF);
             companySelect.addEventListener('change', updateBranchOptions);
             showResolvedIssues.addEventListener('change', updateIssuesDashboard);
             
@@ -663,18 +676,19 @@
             criticalServersCard.addEventListener('click', () => filterByStatus('critical'));
         }
 
-        // Setup drive sliders
-        function setupDriveSliders() {
-            const sliders = document.querySelectorAll('.drive-slider');
-            sliders.forEach(slider => {
-                slider.addEventListener('input', function() {
+        // Setup drive inputs
+        function setupDriveInputs() {
+            const inputs = document.querySelectorAll('.drive-days-input');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
                     const driveLetter = this.id.replace('drive', '');
                     const statusElement = document.getElementById(`${this.id}Status`);
-                    const value = this.value;
+                    const value = parseInt(this.value) || 0;
                     
-                    statusElement.textContent = `${value}%`;
-                    
-                    // Update status class based on value
+                    // Update status based on days remaining
+                    const status = getDriveStatus(value);
+                    statusElement.textContent = status === 'healthy' ? 'Healthy' : 
+                                              status === 'warning' ? 'Warning' : 'Critical';
                     statusElement.className = 'status-badge ' + getDriveStatusClass(value);
                 });
             });
@@ -736,12 +750,12 @@
                     <td>
                         <div class="drive-health-mini">
                             <div class="d-flex mb-1">
-                                <small class="me-2">C: ${server.driveHealth.c}%</small>
-                                <small class="me-2">D: ${server.driveHealth.d}%</small>
+                                <small class="me-2">C: ${server.driveHealth.c}d</small>
+                                <small class="me-2">D: ${server.driveHealth.d}d</small>
                             </div>
                             <div class="d-flex">
-                                <small class="me-2">E: ${server.driveHealth.e}%</small>
-                                <small class="me-2">F: ${server.driveHealth.f}%</small>
+                                <small class="me-2">E: ${server.driveHealth.e}d</small>
+                                <small class="me-2">F: ${server.driveHealth.f}d</small>
                             </div>
                         </div>
                     </td>
@@ -792,7 +806,7 @@
             historyTableBody.innerHTML = '';
             
             if (history.length === 0) {
-                historyTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No history records found</td></tr>';
+                historyTableBody.innerHTML = '<tr><td colspan="8" class="text-center">No history records found</td></tr>';
                 return;
             }
             
@@ -804,15 +818,17 @@
                 row.innerHTML = `
                     <td>${record.date}</td>
                     <td>${record.serverName}</td>
+                    <td>${formatCompanyName(record.company)}</td>
+                    <td>${record.branch}</td>
                     <td>
                         <div class="drive-health-mini">
                             <div class="d-flex mb-1">
-                                <small class="me-2">C: ${record.driveHealth.c}%</small>
-                                <small class="me-2">D: ${record.driveHealth.d}%</small>
+                                <small class="me-2">C: ${record.driveHealth.c}d</small>
+                                <small class="me-2">D: ${record.driveHealth.d}d</small>
                             </div>
                             <div class="d-flex">
-                                <small class="me-2">E: ${record.driveHealth.e}%</small>
-                                <small class="me-2">F: ${record.driveHealth.f}%</small>
+                                <small class="me-2">E: ${record.driveHealth.e}d</small>
+                                <small class="me-2">F: ${record.driveHealth.f}d</small>
                             </div>
                         </div>
                     </td>
@@ -1007,17 +1023,17 @@
             document.getElementById('modalTitle').textContent = 'Add New Server Survey';
             serverForm.reset();
             
-            // Reset drive sliders to 100%
-            document.getElementById('driveC').value = 100;
-            document.getElementById('driveD').value = 100;
-            document.getElementById('driveE').value = 100;
-            document.getElementById('driveF').value = 100;
+            // Reset drive inputs to 1000 days
+            document.getElementById('driveC').value = 1000;
+            document.getElementById('driveD').value = 1000;
+            document.getElementById('driveE').value = 1000;
+            document.getElementById('driveF').value = 1000;
             
             // Update status displays
-            document.getElementById('driveCStatus').textContent = '100%';
-            document.getElementById('driveDStatus').textContent = '100%';
-            document.getElementById('driveEStatus').textContent = '100%';
-            document.getElementById('driveFStatus').textContent = '100%';
+            document.getElementById('driveCStatus').textContent = 'Healthy';
+            document.getElementById('driveDStatus').textContent = 'Healthy';
+            document.getElementById('driveEStatus').textContent = 'Healthy';
+            document.getElementById('driveFStatus').textContent = 'Healthy';
             
             document.getElementById('driveCStatus').className = 'status-badge status-good';
             document.getElementById('driveDStatus').className = 'status-badge status-good';
@@ -1048,10 +1064,14 @@
             document.getElementById('driveF').value = server.driveHealth.f;
             
             // Update status displays
-            document.getElementById('driveCStatus').textContent = `${server.driveHealth.c}%`;
-            document.getElementById('driveDStatus').textContent = `${server.driveHealth.d}%`;
-            document.getElementById('driveEStatus').textContent = `${server.driveHealth.e}%`;
-            document.getElementById('driveFStatus').textContent = `${server.driveHealth.f}%`;
+            document.getElementById('driveCStatus').textContent = getDriveStatus(server.driveHealth.c) === 'healthy' ? 'Healthy' : 
+                                                                 getDriveStatus(server.driveHealth.c) === 'warning' ? 'Warning' : 'Critical';
+            document.getElementById('driveDStatus').textContent = getDriveStatus(server.driveHealth.d) === 'healthy' ? 'Healthy' : 
+                                                                 getDriveStatus(server.driveHealth.d) === 'warning' ? 'Warning' : 'Critical';
+            document.getElementById('driveEStatus').textContent = getDriveStatus(server.driveHealth.e) === 'healthy' ? 'Healthy' : 
+                                                                 getDriveStatus(server.driveHealth.e) === 'warning' ? 'Warning' : 'Critical';
+            document.getElementById('driveFStatus').textContent = getDriveStatus(server.driveHealth.f) === 'healthy' ? 'Healthy' : 
+                                                                 getDriveStatus(server.driveHealth.f) === 'warning' ? 'Warning' : 'Critical';
             
             document.getElementById('driveCStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.c);
             document.getElementById('driveDStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.d);
@@ -1074,10 +1094,10 @@
             const company = document.getElementById('company').value;
             const branch = document.getElementById('branch').value;
             const driveHealth = {
-                c: parseInt(document.getElementById('driveC').value),
-                d: parseInt(document.getElementById('driveD').value),
-                e: parseInt(document.getElementById('driveE').value),
-                f: parseInt(document.getElementById('driveF').value)
+                c: parseInt(document.getElementById('driveC').value) || 0,
+                d: parseInt(document.getElementById('driveD').value) || 0,
+                e: parseInt(document.getElementById('driveE').value) || 0,
+                f: parseInt(document.getElementById('driveF').value) || 0
             };
             const upsStatus = document.getElementById('upsStatus').value;
             const antivirusStatus = document.getElementById('antivirusStatus').value;
@@ -1187,27 +1207,174 @@
         // Print report
         function printReport() {
             document.getElementById('printDate').textContent = new Date().toLocaleDateString();
-            window.print();
+            
+            // Create a print-friendly version
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Server Survey Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .status-good { color: green; }
+                        .status-warning { color: orange; }
+                        .status-danger { color: red; }
+                        .text-center { text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <h1 class="text-center">SERVER SURVEY REPORT</h1>
+                    <p class="text-center">Generated on: ${new Date().toLocaleDateString()}</p>
+                    
+                    <h2>Server Status Summary</h2>
+                    <table>
+                        <tr>
+                            <th>Total Servers</th>
+                            <th>Healthy Servers</th>
+                            <th>Servers with Warnings</th>
+                            <th>Critical Servers</th>
+                        </tr>
+                        <tr>
+                            <td>${servers.length}</td>
+                            <td>${servers.filter(s => getServerStatus(s) === 'healthy').length}</td>
+                            <td>${servers.filter(s => getServerStatus(s) === 'warning').length}</td>
+                            <td>${servers.filter(s => getServerStatus(s) === 'critical').length}</td>
+                        </tr>
+                    </table>
+                    
+                    <h2>Server Details</h2>
+                    <table>
+                        <tr>
+                            <th>Server Name</th>
+                            <th>Company</th>
+                            <th>Branch</th>
+                            <th>Drive Health</th>
+                            <th>UPS Status</th>
+                            <th>Antivirus</th>
+                            <th>Status</th>
+                            <th>Comments</th>
+                        </tr>
+            `);
+            
+            servers.forEach(server => {
+                const status = getServerStatus(server);
+                const statusClass = status === 'healthy' ? 'status-good' : 
+                                  status === 'warning' ? 'status-warning' : 'status-danger';
+                
+                printWindow.document.write(`
+                    <tr>
+                        <td>${server.serverName}</td>
+                        <td>${formatCompanyName(server.company)}</td>
+                        <td>${server.branch}</td>
+                        <td>
+                            C: ${server.driveHealth.c}d, 
+                            D: ${server.driveHealth.d}d, 
+                            E: ${server.driveHealth.e}d, 
+                            F: ${server.driveHealth.f}d
+                        </td>
+                        <td>${server.upsStatus === 'working' ? 'Working' : 'Not Working'}</td>
+                        <td>${formatAntivirusStatus(server.antivirusStatus)}</td>
+                        <td class="${statusClass}">${status.charAt(0).toUpperCase() + status.slice(1)}</td>
+                        <td>${server.comments || 'No comments'}</td>
+                    </tr>
+                `);
+            });
+            
+            printWindow.document.write(`
+                    </table>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Export to PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.text('SERVER SURVEY REPORT', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
+            
+            // Add summary table
+            doc.autoTable({
+                startY: 30,
+                head: [['Total Servers', 'Healthy Servers', 'Servers with Warnings', 'Critical Servers']],
+                body: [[
+                    servers.length,
+                    servers.filter(s => getServerStatus(s) === 'healthy').length,
+                    servers.filter(s => getServerStatus(s) === 'warning').length,
+                    servers.filter(s => getServerStatus(s) === 'critical').length
+                ]],
+                theme: 'grid',
+                headStyles: { fillColor: [44, 62, 80] }
+            });
+            
+            // Prepare data for detailed table
+            const tableData = servers.map(server => {
+                const status = getServerStatus(server);
+                return [
+                    server.serverName,
+                    formatCompanyName(server.company),
+                    server.branch,
+                    `C: ${server.driveHealth.c}d, D: ${server.driveHealth.d}d, E: ${server.driveHealth.e}d, F: ${server.driveHealth.f}d`,
+                    server.upsStatus === 'working' ? 'Working' : 'Not Working',
+                    formatAntivirusStatus(server.antivirusStatus),
+                    status.charAt(0).toUpperCase() + status.slice(1),
+                    server.comments || 'No comments'
+                ];
+            });
+            
+            // Add detailed table
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 10,
+                head: [['Server Name', 'Company', 'Branch', 'Drive Health', 'UPS', 'Antivirus', 'Status', 'Comments']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [44, 62, 80] },
+                styles: { fontSize: 8 },
+                columnStyles: {
+                    0: { cellWidth: 25 },
+                    1: { cellWidth: 20 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 35 },
+                    4: { cellWidth: 15 },
+                    5: { cellWidth: 20 },
+                    6: { cellWidth: 15 },
+                    7: { cellWidth: 'auto' }
+                }
+            });
+            
+            // Save the PDF
+            doc.save('server-survey-report.pdf');
         }
 
         // Helper functions
-        function getDriveStatusClass(health) {
-            if (health >= 70) return 'status-good';
-            if (health >= 30) return 'status-warning';
+        function getDriveStatusClass(days) {
+            if (days >= 500) return 'status-good';
+            if (days >= 150) return 'status-warning';
             return 'status-danger';
         }
 
-        function getDriveStatus(health) {
-            if (health >= 70) return 'healthy';
-            if (health >= 30) return 'warning';
+        function getDriveStatus(days) {
+            if (days >= 500) return 'healthy';
+            if (days >= 150) return 'warning';
             return 'critical';
         }
 
         function getServerStatus(server) {
             // Check drive health
             const drives = Object.values(server.driveHealth);
-            const criticalDrives = drives.filter(health => getDriveStatus(health) === 'critical').length;
-            const warningDrives = drives.filter(health => getDriveStatus(health) === 'warning').length;
+            const criticalDrives = drives.filter(days => getDriveStatus(days) === 'critical').length;
+            const warningDrives = drives.filter(days => getDriveStatus(days) === 'warning').length;
             
             // Check other components
             const upsCritical = server.upsStatus === 'not-working';
@@ -1228,12 +1395,12 @@
             const issues = [];
             
             // Check drives
-            Object.entries(server.driveHealth).forEach(([drive, health]) => {
-                const status = getDriveStatus(health);
+            Object.entries(server.driveHealth).forEach(([drive, days]) => {
+                const status = getDriveStatus(days);
                 if (status === 'critical') {
-                    issues.push(`Drive ${drive.toUpperCase()}: health critical (${health}%)`);
+                    issues.push(`Drive ${drive.toUpperCase()}: critical (${days} days)`);
                 } else if (status === 'warning') {
-                    issues.push(`Drive ${drive.toUpperCase()}: health warning (${health}%)`);
+                    issues.push(`Drive ${drive.toUpperCase()}: warning (${days} days)`);
                 }
             });
             
