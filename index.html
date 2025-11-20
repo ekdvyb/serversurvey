@@ -186,7 +186,7 @@
         }
         
         .drive-status {
-            width: 100px;
+            width: 150px;
             text-align: center;
         }
         
@@ -210,6 +210,30 @@
         
         .drive-days-input {
             width: 100px;
+        }
+        
+        .failure-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        .resolve-btn {
+            font-size: 0.8rem;
+            padding: 3px 8px;
+        }
+        
+        .duplicate-warning {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         
         @media print {
@@ -363,6 +387,7 @@
                                 <th>Drive Health</th>
                                 <th>UPS Status</th>
                                 <th>Antivirus</th>
+                                <th>Status</th>
                                 <th>Last Updated</th>
                                 <th class="no-print">Actions</th>
                             </tr>
@@ -393,8 +418,14 @@
 
         <!-- History Records -->
         <div class="card mt-4 no-print">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <span>Survey History</span>
+                <div class="history-actions">
+                    <span class="badge bg-secondary me-2" id="historyCount">0 records</span>
+                    <button class="btn btn-sm btn-outline-danger" id="resetHistoryBtn">
+                        <i class="fas fa-trash me-1"></i> Reset History
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -408,6 +439,7 @@
                                 <th>Drive Health</th>
                                 <th>UPS Status</th>
                                 <th>Antivirus</th>
+                                <th>Status</th>
                                 <th>Comments</th>
                             </tr>
                         </thead>
@@ -454,6 +486,10 @@
                         <div class="mb-3">
                             <label class="form-label">Server Name</label>
                             <input type="text" class="form-control" id="serverName" required>
+                            <div class="duplicate-warning" id="duplicateWarning">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                This server already exists. Editing will update the existing record.
+                            </div>
                         </div>
                         
                         <!-- Drive Health Section -->
@@ -466,6 +502,7 @@
                                 </div>
                                 <div class="drive-status">
                                     <span class="status-badge status-good" id="driveCStatus">Healthy</span>
+                                    <div class="failure-date" id="driveCFailure"></div>
                                 </div>
                             </div>
                             <div class="drive-row">
@@ -475,6 +512,7 @@
                                 </div>
                                 <div class="drive-status">
                                     <span class="status-badge status-good" id="driveDStatus">Healthy</span>
+                                    <div class="failure-date" id="driveDFailure"></div>
                                 </div>
                             </div>
                             <div class="drive-row">
@@ -484,6 +522,7 @@
                                 </div>
                                 <div class="drive-status">
                                     <span class="status-badge status-good" id="driveEStatus">Healthy</span>
+                                    <div class="failure-date" id="driveEFailure"></div>
                                 </div>
                             </div>
                             <div class="drive-row">
@@ -493,6 +532,7 @@
                                 </div>
                                 <div class="drive-status">
                                     <span class="status-badge status-good" id="driveFStatus">Healthy</span>
+                                    <div class="failure-date" id="driveFFailure"></div>
                                 </div>
                             </div>
                         </div>
@@ -529,6 +569,37 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="saveServer">Save Survey</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset History Confirmation Modal -->
+    <div class="modal fade" id="resetHistoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Reset History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to reset the survey history?</p>
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> This action will permanently delete all history records and cannot be undone. 
+                        Your current server data will not be affected.
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmReset">
+                        <label class="form-check-label" for="confirmReset">
+                            I understand this action cannot be undone
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmResetHistory" disabled>
+                        <i class="fas fa-trash me-1"></i> Reset History
+                    </button>
                 </div>
             </div>
         </div>
@@ -572,8 +643,10 @@
                 upsStatus: "working",
                 antivirusStatus: "installed",
                 comments: "All systems functioning normally.",
-                lastUpdated: "2023-05-15",
-                issues: []
+                lastUpdated: new Date().toISOString().split('T')[0],
+                status: "healthy",
+                issues: [],
+                resolvedIssues: []
             },
             {
                 id: 2,
@@ -589,8 +662,14 @@
                 upsStatus: "not-working",
                 antivirusStatus: "not-working",
                 comments: "UPS needs replacement. Antivirus definitions outdated.",
-                lastUpdated: "2023-05-14",
-                issues: ["UPS not working", "Antivirus not working", "Drive E: health critical"]
+                lastUpdated: new Date().toISOString().split('T')[0],
+                status: "critical",
+                issues: [
+                    { id: 1, type: "ups", description: "UPS not working", resolved: false, dateReported: new Date().toISOString().split('T')[0] },
+                    { id: 2, type: "antivirus", description: "Antivirus not working", resolved: false, dateReported: new Date().toISOString().split('T')[0] },
+                    { id: 3, type: "drive", description: "Drive E: critical (120 days)", resolved: false, dateReported: new Date().toISOString().split('T')[0] }
+                ],
+                resolvedIssues: []
             },
             {
                 id: 3,
@@ -606,8 +685,13 @@
                 upsStatus: "working",
                 antivirusStatus: "not-installed",
                 comments: "Drive failure imminent. No antivirus installed.",
-                lastUpdated: "2023-05-13",
-                issues: ["Drive C: health critical", "Antivirus not installed"]
+                lastUpdated: new Date().toISOString().split('T')[0],
+                status: "critical",
+                issues: [
+                    { id: 1, type: "drive", description: "Drive C: critical (80 days)", resolved: false, dateReported: new Date().toISOString().split('T')[0] },
+                    { id: 2, type: "antivirus", description: "Antivirus not installed", resolved: false, dateReported: new Date().toISOString().split('T')[0] }
+                ],
+                resolvedIssues: []
             }
         ];
 
@@ -627,11 +711,18 @@
         const addServerBtn = document.getElementById('addServerBtn');
         const printReportBtn = document.getElementById('printReport');
         const exportPDFBtn = document.getElementById('exportPDF');
+        const resetHistoryBtn = document.getElementById('resetHistoryBtn');
+        const confirmResetHistory = document.getElementById('confirmResetHistory');
+        const confirmResetCheckbox = document.getElementById('confirmReset');
+        const historyCount = document.getElementById('historyCount');
         const serverModal = new bootstrap.Modal(document.getElementById('serverModal'));
+        const resetHistoryModal = new bootstrap.Modal(document.getElementById('resetHistoryModal'));
         const serverForm = document.getElementById('serverForm');
         const saveServerBtn = document.getElementById('saveServer');
         const companySelect = document.getElementById('company');
         const branchSelect = document.getElementById('branch');
+        const serverNameInput = document.getElementById('serverName');
+        const duplicateWarning = document.getElementById('duplicateWarning');
         const totalServersEl = document.getElementById('totalServers');
         const healthyServersEl = document.getElementById('healthyServers');
         const warningServersEl = document.getElementById('warningServers');
@@ -652,6 +743,8 @@
             setupEventListeners();
             populateBranchOptions();
             setupDriveInputs();
+            setupDuplicateDetection();
+            updateHistoryCount();
         }
 
         // Set up event listeners
@@ -666,6 +759,9 @@
             saveServerBtn.addEventListener('click', saveServer);
             printReportBtn.addEventListener('click', printReport);
             exportPDFBtn.addEventListener('click', exportToPDF);
+            resetHistoryBtn.addEventListener('click', showResetHistoryModal);
+            confirmResetHistory.addEventListener('click', resetHistory);
+            confirmResetCheckbox.addEventListener('change', toggleResetButton);
             companySelect.addEventListener('change', updateBranchOptions);
             showResolvedIssues.addEventListener('change', updateIssuesDashboard);
             
@@ -676,6 +772,95 @@
             criticalServersCard.addEventListener('click', () => filterByStatus('critical'));
         }
 
+        // Show reset history confirmation modal
+        function showResetHistoryModal() {
+            confirmResetCheckbox.checked = false;
+            confirmResetHistory.disabled = true;
+            resetHistoryModal.show();
+        }
+
+        // Toggle reset button based on confirmation
+        function toggleResetButton() {
+            confirmResetHistory.disabled = !confirmResetCheckbox.checked;
+        }
+
+        // Reset history function
+        function resetHistory() {
+            // Clear history array
+            history = [];
+            
+            // Update localStorage
+            localStorage.setItem('serverSurveyHistory', JSON.stringify(history));
+            
+            // Update UI
+            renderHistoryTable();
+            updateHistoryCount();
+            
+            // Close modal
+            resetHistoryModal.hide();
+            
+            // Show success message
+            showAlert('History has been reset successfully.', 'success');
+        }
+
+        // Update history count badge
+        function updateHistoryCount() {
+            historyCount.textContent = `${history.length} records`;
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert at the top of the container
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Setup duplicate detection
+        function setupDuplicateDetection() {
+            serverNameInput.addEventListener('input', checkForDuplicate);
+        }
+
+        // Check if server name already exists
+        function checkForDuplicate() {
+            const serverName = serverNameInput.value.trim();
+            if (!serverName) {
+                duplicateWarning.style.display = 'none';
+                return;
+            }
+
+            const existingServer = servers.find(server => 
+                server.serverName.toLowerCase() === serverName.toLowerCase()
+            );
+
+            if (existingServer) {
+                duplicateWarning.style.display = 'block';
+                // If we're not already editing this server, set the form to edit mode
+                const currentEditId = serverForm.getAttribute('data-edit-id');
+                if (!currentEditId || parseInt(currentEditId) !== existingServer.id) {
+                    serverForm.setAttribute('data-edit-id', existingServer.id);
+                    document.getElementById('modalTitle').textContent = 'Update Server Survey';
+                }
+            } else {
+                duplicateWarning.style.display = 'none';
+                serverForm.removeAttribute('data-edit-id');
+                document.getElementById('modalTitle').textContent = 'Add New Server Survey';
+            }
+        }
+
         // Setup drive inputs
         function setupDriveInputs() {
             const inputs = document.querySelectorAll('.drive-days-input');
@@ -683,6 +868,7 @@
                 input.addEventListener('input', function() {
                     const driveLetter = this.id.replace('drive', '');
                     const statusElement = document.getElementById(`${this.id}Status`);
+                    const failureElement = document.getElementById(`${this.id}Failure`);
                     const value = parseInt(this.value) || 0;
                     
                     // Update status based on days remaining
@@ -690,8 +876,25 @@
                     statusElement.textContent = status === 'healthy' ? 'Healthy' : 
                                               status === 'warning' ? 'Warning' : 'Critical';
                     statusElement.className = 'status-badge ' + getDriveStatusClass(value);
+                    
+                    // Update failure date
+                    if (value < 500) {
+                        const failureDate = calculateFailureDate(value);
+                        failureElement.textContent = `Fail: ${failureDate}`;
+                        failureElement.style.display = 'block';
+                    } else {
+                        failureElement.style.display = 'none';
+                    }
                 });
             });
+        }
+
+        // Calculate failure date based on days remaining
+        function calculateFailureDate(days) {
+            const today = new Date();
+            const failureDate = new Date(today);
+            failureDate.setDate(today.getDate() + days);
+            return failureDate.toISOString().split('T')[0];
         }
 
         // Populate branch options based on selected company
@@ -732,7 +935,7 @@
             serverTableBody.innerHTML = '';
             
             if (serversToRender.length === 0) {
-                serverTableBody.innerHTML = '<tr><td colspan="8" class="text-center">No servers found matching your criteria</td></tr>';
+                serverTableBody.innerHTML = '<tr><td colspan="9" class="text-center">No servers found matching your criteria</td></tr>';
                 return;
             }
             
@@ -740,6 +943,7 @@
                 const serverStatus = getServerStatus(server);
                 const upsStatusClass = server.upsStatus === 'working' ? 'status-good' : 'status-danger';
                 const antivirusStatusClass = getAntivirusStatusClass(server.antivirusStatus);
+                const serverStatusClass = getServerStatusClass(serverStatus);
                 
                 const row = document.createElement('tr');
                 row.className = getServerRowClass(server);
@@ -768,6 +972,11 @@
                     <td>
                         <span class="status-badge ${antivirusStatusClass}">
                             ${formatAntivirusStatus(server.antivirusStatus)}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${serverStatusClass}">
+                            ${serverStatus.charAt(0).toUpperCase() + serverStatus.slice(1)}
                         </span>
                     </td>
                     <td>${server.lastUpdated}</td>
@@ -806,7 +1015,7 @@
             historyTableBody.innerHTML = '';
             
             if (history.length === 0) {
-                historyTableBody.innerHTML = '<tr><td colspan="8" class="text-center">No history records found</td></tr>';
+                historyTableBody.innerHTML = '<tr><td colspan="9" class="text-center">No history records found</td></tr>';
                 return;
             }
             
@@ -814,6 +1023,9 @@
             const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
             
             sortedHistory.forEach(record => {
+                const status = getServerStatus(record);
+                const statusClass = getServerStatusClass(status);
+                
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${record.date}</td>
@@ -842,10 +1054,17 @@
                             ${formatAntivirusStatus(record.antivirusStatus)}
                         </span>
                     </td>
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            ${status.charAt(0).toUpperCase() + status.slice(1)}
+                        </span>
+                    </td>
                     <td>${record.comments || 'No comments'}</td>
                 `;
                 historyTableBody.appendChild(row);
             });
+            
+            updateHistoryCount();
         }
 
         // Update dashboard statistics
@@ -876,49 +1095,39 @@
             let allIssues = [];
             
             servers.forEach(server => {
-                const serverStatus = getServerStatus(server);
+                // Get current active issues
+                const activeIssues = server.issues.filter(issue => !issue.resolved);
                 
-                // Only show issues for servers with warnings or critical status
-                if (serverStatus === 'healthy') return;
-                
-                // Get current issues
-                const currentIssues = getServerIssues(server);
-                
-                // Add server info to each issue
-                currentIssues.forEach(issue => {
+                // Add server info to each active issue
+                activeIssues.forEach(issue => {
                     allIssues.push({
                         server: server.serverName,
                         branch: server.branch,
                         company: server.company,
-                        issue: issue,
-                        date: server.lastUpdated,
-                        resolved: false
+                        issue: issue.description,
+                        date: issue.dateReported,
+                        resolved: false,
+                        issueId: issue.id,
+                        serverId: server.id
                     });
                 });
                 
-                // Check if there are resolved issues (issues that were present in history but not now)
+                // Add resolved issues if showing them
                 if (showResolved) {
-                    const serverHistory = history.filter(h => h.serverName === server.serverName)
-                        .sort((a, b) => new Date(b.date) - new Date(a.date));
-                    
-                    if (serverHistory.length > 1) {
-                        const previousRecord = serverHistory[1]; // Get the previous record
-                        const previousIssues = getServerIssues(previousRecord);
-                        
-                        // Find issues that were present before but not now
-                        previousIssues.forEach(issue => {
-                            if (!currentIssues.includes(issue)) {
-                                allIssues.push({
-                                    server: server.serverName,
-                                    branch: server.branch,
-                                    company: server.company,
-                                    issue: issue,
-                                    date: server.lastUpdated,
-                                    resolved: true
-                                });
-                            }
+                    const resolvedIssues = server.resolvedIssues;
+                    resolvedIssues.forEach(issue => {
+                        allIssues.push({
+                            server: server.serverName,
+                            branch: server.branch,
+                            company: server.company,
+                            issue: issue.description,
+                            date: issue.dateReported,
+                            resolved: true,
+                            resolvedDate: issue.dateResolved,
+                            issueId: issue.id,
+                            serverId: server.id
                         });
-                    }
+                    });
                 }
             });
             
@@ -950,15 +1159,22 @@
                 issueItem.className = `issue-item ${issue.resolved ? 'resolved' : ''}`;
                 issueItem.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
+                        <div class="flex-grow-1">
                             <h6>${issue.server} <small class="text-muted">- ${issue.branch} (${formatCompanyName(issue.company)})</small></h6>
                             <p class="mb-1">${issue.issue}</p>
                             <small class="text-muted">Reported: ${issue.date}</small>
+                            ${issue.resolved ? `<br><small class="text-success">Resolved: ${issue.resolvedDate}</small>` : ''}
                         </div>
-                        <div>
+                        <div class="d-flex flex-column">
                             ${issue.resolved ? 
-                                '<span class="badge bg-success">Resolved</span>' : 
-                                '<span class="badge bg-danger">Active</span>'
+                                '<span class="badge bg-success mb-2">Resolved</span>' : 
+                                '<span class="badge bg-danger mb-2">Active</span>'
+                            }
+                            ${!issue.resolved ? 
+                                `<button class="btn btn-sm btn-success resolve-btn" data-server-id="${issue.serverId}" data-issue-id="${issue.issueId}">
+                                    <i class="fas fa-check me-1"></i> Resolve
+                                </button>` : 
+                                ''
                             }
                         </div>
                     </div>
@@ -967,6 +1183,63 @@
             });
             
             issuesDashboard.appendChild(issuesList);
+            
+            // Add event listeners to resolve buttons
+            document.querySelectorAll('.resolve-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const serverId = parseInt(e.currentTarget.getAttribute('data-server-id'));
+                    const issueId = parseInt(e.currentTarget.getAttribute('data-issue-id'));
+                    resolveIssue(serverId, issueId);
+                });
+            });
+        }
+
+        // Resolve an issue
+        function resolveIssue(serverId, issueId) {
+            const server = servers.find(s => s.id === serverId);
+            if (!server) return;
+            
+            const issueIndex = server.issues.findIndex(issue => issue.id === issueId);
+            if (issueIndex === -1) return;
+            
+            // Mark issue as resolved
+            const resolvedIssue = {
+                ...server.issues[issueIndex],
+                resolved: true,
+                dateResolved: new Date().toISOString().split('T')[0]
+            };
+            
+            // Remove from active issues and add to resolved issues
+            server.issues.splice(issueIndex, 1);
+            server.resolvedIssues.push(resolvedIssue);
+            
+            // Update server status
+            server.status = getServerStatus(server);
+            
+            // Add resolution to history
+            history.push({
+                serverName: server.serverName,
+                company: server.company,
+                branch: server.branch,
+                driveHealth: server.driveHealth,
+                upsStatus: server.upsStatus,
+                antivirusStatus: server.antivirusStatus,
+                comments: `ISSUE RESOLVED: ${resolvedIssue.description}`,
+                date: new Date().toISOString().split('T')[0],
+                status: server.status,
+                action: 'issue_resolved',
+                resolvedIssue: resolvedIssue.description
+            });
+            
+            // Save to localStorage
+            localStorage.setItem('serverSurveyData', JSON.stringify(servers));
+            localStorage.setItem('serverSurveyHistory', JSON.stringify(history));
+            
+            // Update UI
+            updateDashboardStats();
+            updateIssuesDashboard();
+            renderServerTable();
+            renderHistoryTable();
         }
 
         // Filter servers based on selected criteria
@@ -1022,6 +1295,8 @@
         function showAddServerModal() {
             document.getElementById('modalTitle').textContent = 'Add New Server Survey';
             serverForm.reset();
+            duplicateWarning.style.display = 'none';
+            serverForm.removeAttribute('data-edit-id');
             
             // Reset drive inputs to 1000 days
             document.getElementById('driveC').value = 1000;
@@ -1040,6 +1315,12 @@
             document.getElementById('driveEStatus').className = 'status-badge status-good';
             document.getElementById('driveFStatus').className = 'status-badge status-good';
             
+            // Hide failure dates
+            document.getElementById('driveCFailure').style.display = 'none';
+            document.getElementById('driveDFailure').style.display = 'none';
+            document.getElementById('driveEFailure').style.display = 'none';
+            document.getElementById('driveFFailure').style.display = 'none';
+            
             serverModal.show();
         }
 
@@ -1048,7 +1329,7 @@
             const server = servers.find(s => s.id === id);
             if (!server) return;
             
-            document.getElementById('modalTitle').textContent = 'Edit Server Survey';
+            document.getElementById('modalTitle').textContent = 'Update Server Survey';
             document.getElementById('serverName').value = server.serverName;
             document.getElementById('company').value = server.company;
             populateBranchOptions();
@@ -1078,6 +1359,24 @@
             document.getElementById('driveEStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.e);
             document.getElementById('driveFStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.f);
             
+            // Update failure dates
+            if (server.driveHealth.c < 500) {
+                document.getElementById('driveCFailure').textContent = `Fail: ${calculateFailureDate(server.driveHealth.c)}`;
+                document.getElementById('driveCFailure').style.display = 'block';
+            }
+            if (server.driveHealth.d < 500) {
+                document.getElementById('driveDFailure').textContent = `Fail: ${calculateFailureDate(server.driveHealth.d)}`;
+                document.getElementById('driveDFailure').style.display = 'block';
+            }
+            if (server.driveHealth.e < 500) {
+                document.getElementById('driveEFailure').textContent = `Fail: ${calculateFailureDate(server.driveHealth.e)}`;
+                document.getElementById('driveEFailure').style.display = 'block';
+            }
+            if (server.driveHealth.f < 500) {
+                document.getElementById('driveFFailure').textContent = `Fail: ${calculateFailureDate(server.driveHealth.f)}`;
+                document.getElementById('driveFFailure').style.display = 'block';
+            }
+            
             // Store the ID for updating
             serverForm.setAttribute('data-edit-id', id);
             serverModal.show();
@@ -1090,7 +1389,7 @@
                 return;
             }
             
-            const serverName = document.getElementById('serverName').value;
+            const serverName = document.getElementById('serverName').value.trim();
             const company = document.getElementById('company').value;
             const branch = document.getElementById('branch').value;
             const driveHealth = {
@@ -1104,14 +1403,27 @@
             const comments = document.getElementById('comments').value;
             
             const editId = serverForm.getAttribute('data-edit-id');
+            const currentDate = new Date().toISOString().split('T')[0];
+            
+            // Check for duplicate (case insensitive)
+            const existingServer = servers.find(server => 
+                server.serverName.toLowerCase() === serverName.toLowerCase() && 
+                (!editId || server.id !== parseInt(editId))
+            );
+            
+            if (existingServer && !editId) {
+                alert('A server with this name already exists. Please use a different name or edit the existing server.');
+                return;
+            }
             
             if (editId) {
                 // Update existing server
                 const index = servers.findIndex(s => s.id === parseInt(editId));
                 if (index !== -1) {
-                    // Determine current issues before update
-                    const oldIssues = getServerIssues(servers[index]);
+                    // Get old server data for comparison
+                    const oldServer = servers[index];
                     
+                    // Update server
                     servers[index] = {
                         ...servers[index],
                         serverName,
@@ -1121,11 +1433,11 @@
                         upsStatus,
                         antivirusStatus,
                         comments,
-                        lastUpdated: new Date().toISOString().split('T')[0]
+                        lastUpdated: currentDate
                     };
                     
-                    // Determine new issues after update
-                    const newIssues = getServerIssues(servers[index]);
+                    // Update issues based on new status
+                    updateServerIssues(servers[index], oldServer);
                     
                     // Add to history
                     history.push({
@@ -1136,9 +1448,9 @@
                         upsStatus,
                         antivirusStatus,
                         comments,
-                        date: new Date().toISOString().split('T')[0],
-                        resolvedIssues: oldIssues.filter(issue => !newIssues.includes(issue)),
-                        newIssues: newIssues.filter(issue => !oldIssues.includes(issue))
+                        date: currentDate,
+                        status: getServerStatus(servers[index]),
+                        action: 'server_updated'
                     });
                 }
             } else {
@@ -1153,8 +1465,13 @@
                     upsStatus,
                     antivirusStatus,
                     comments,
-                    lastUpdated: new Date().toISOString().split('T')[0]
+                    lastUpdated: currentDate,
+                    issues: [],
+                    resolvedIssues: []
                 };
+                
+                // Set initial issues
+                updateServerIssues(newServer);
                 
                 servers.push(newServer);
                 
@@ -1167,8 +1484,9 @@
                     upsStatus,
                     antivirusStatus,
                     comments,
-                    date: new Date().toISOString().split('T')[0],
-                    newIssues: getServerIssues(newServer)
+                    date: currentDate,
+                    status: getServerStatus(newServer),
+                    action: 'server_added'
                 });
             }
             
@@ -1188,16 +1506,96 @@
             serverForm.removeAttribute('data-edit-id');
         }
 
+        // Update server issues based on current status
+        function updateServerIssues(server, oldServer = null) {
+            // Clear existing active issues
+            server.issues = [];
+            
+            // Check drives for issues
+            Object.entries(server.driveHealth).forEach(([drive, days]) => {
+                const status = getDriveStatus(days);
+                if (status === 'critical') {
+                    server.issues.push({
+                        id: Date.now() + Math.random(),
+                        type: "drive",
+                        description: `Drive ${drive.toUpperCase()}: critical (${days} days)`,
+                        resolved: false,
+                        dateReported: server.lastUpdated
+                    });
+                } else if (status === 'warning') {
+                    server.issues.push({
+                        id: Date.now() + Math.random(),
+                        type: "drive",
+                        description: `Drive ${drive.toUpperCase()}: warning (${days} days)`,
+                        resolved: false,
+                        dateReported: server.lastUpdated
+                    });
+                }
+            });
+            
+            // Check UPS
+            if (server.upsStatus === 'not-working') {
+                server.issues.push({
+                    id: Date.now() + Math.random(),
+                    type: "ups",
+                    description: "UPS not working",
+                    resolved: false,
+                    dateReported: server.lastUpdated
+                });
+            }
+            
+            // Check antivirus
+            if (server.antivirusStatus === 'not-installed') {
+                server.issues.push({
+                    id: Date.now() + Math.random(),
+                    type: "antivirus",
+                    description: "Antivirus not installed",
+                    resolved: false,
+                    dateReported: server.lastUpdated
+                });
+            } else if (server.antivirusStatus === 'not-working') {
+                server.issues.push({
+                    id: Date.now() + Math.random(),
+                    type: "antivirus",
+                    description: "Antivirus not working",
+                    resolved: false,
+                    dateReported: server.lastUpdated
+                });
+            }
+            
+            // Update server status
+            server.status = getServerStatus(server);
+        }
+
         // Delete server
         function deleteServer(id) {
             if (confirm('Are you sure you want to delete this server survey?')) {
+                const server = servers.find(s => s.id === id);
+                if (server) {
+                    // Add deletion to history
+                    history.push({
+                        serverName: server.serverName,
+                        company: server.company,
+                        branch: server.branch,
+                        driveHealth: server.driveHealth,
+                        upsStatus: server.upsStatus,
+                        antivirusStatus: server.antivirusStatus,
+                        comments: 'SERVER DELETED',
+                        date: new Date().toISOString().split('T')[0],
+                        status: 'deleted',
+                        action: 'server_deleted'
+                    });
+                }
+                
                 servers = servers.filter(s => s.id !== id);
                 
                 // Save to localStorage
                 localStorage.setItem('serverSurveyData', JSON.stringify(servers));
+                localStorage.setItem('serverSurveyHistory', JSON.stringify(history));
                 
                 // Update UI
                 renderServerTable();
+                renderHistoryTable();
                 updateDashboardStats();
                 updateIssuesDashboard();
                 filterServers();
@@ -1391,32 +1789,10 @@
             }
         }
 
-        function getServerIssues(server) {
-            const issues = [];
-            
-            // Check drives
-            Object.entries(server.driveHealth).forEach(([drive, days]) => {
-                const status = getDriveStatus(days);
-                if (status === 'critical') {
-                    issues.push(`Drive ${drive.toUpperCase()}: critical (${days} days)`);
-                } else if (status === 'warning') {
-                    issues.push(`Drive ${drive.toUpperCase()}: warning (${days} days)`);
-                }
-            });
-            
-            // Check UPS
-            if (server.upsStatus === 'not-working') {
-                issues.push('UPS not working');
-            }
-            
-            // Check antivirus
-            if (server.antivirusStatus === 'not-installed') {
-                issues.push('Antivirus not installed');
-            } else if (server.antivirusStatus === 'not-working') {
-                issues.push('Antivirus not working');
-            }
-            
-            return issues;
+        function getServerStatusClass(status) {
+            if (status === 'healthy') return 'status-good';
+            if (status === 'warning') return 'status-warning';
+            return 'status-danger';
         }
 
         function getAntivirusStatusClass(status) {
