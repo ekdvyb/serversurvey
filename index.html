@@ -1,1 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVER SURVEY REPORT</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color), #1a2530);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: none;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            font-weight: 600;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-good {
+            background-color: rgba(39, 174, 96, 0.15);
+            color: var(--success-color);
+        }
+        
+        .status-warning {
+            background-color: rgba(243, 156, 18, 0.15);
+            color: var(--warning-color);
+        }
+        
+        .status-danger {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--danger-color);
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+        
+        .server-card {
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .server-card.issue {
+            border-left-color: var(--danger-color);
+        }
+        
+        .server-card.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .filter-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .stats-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .nav-tabs .nav-link.active {
+            font-weight: 600;
+            border-bottom: 3px solid var(--secondary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #6c757d;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+        }
+        
+        .history-table th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+        }
+        
+        .print-only {
+            display: none;
+        }
+        
+        .drive-health-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .drive-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .drive-label {
+            width: 50px;
+            font-weight: 600;
+        }
+        
+        .drive-progress {
+            flex-grow: 1;
+            margin: 0 15px;
+        }
+        
+        .drive-status {
+            width: 100px;
+            text-align: center;
+        }
+        
+        .issues-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .issue-item {
+            padding: 12px 15px;
+            border-left: 4px solid var(--danger-color);
+            background-color: white;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .issue-item.resolved {
+            border-left-color: var(--success-color);
+            opacity: 0.7;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block;
+            }
+            
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1><i class="fas fa-server me-2"></i>SERVER SURVEY REPORT</h1>
+                    <p class="mb-0">Comprehensive server health monitoring and reporting</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-light me-2 no-print" id="printReport">
+                        <i class="fas fa-print me-1"></i> Print Report
+                    </button>
+                    <button class="btn btn-light no-print" id="addServerBtn">
+                        <i class="fas fa-plus me-1"></i> Add Server
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card" id="totalServersCard">
+                    <div class="stats-number text-primary" id="totalServers">0</div>
+                    <div class="stats-label">Total Servers</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card" id="healthyServersCard">
+                    <div class="stats-number text-success" id="healthyServers">0</div>
+                    <div class="stats-label">Healthy Servers</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card" id="warningServersCard">
+                    <div class="stats-number text-warning" id="warningServers">0</div>
+                    <div class="stats-label">Servers with Warnings</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card" id="criticalServersCard">
+                    <div class="stats-number text-danger" id="criticalServers">0</div>
+                    <div class="stats-label">Critical Servers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="filter-section no-print">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Filter by Company</label>
+                        <select class="form-select" id="companyFilter">
+                            <option value="">All Companies</option>
+                            <option value="balmain">Balmain</option>
+                            <option value="norich">Norich</option>
+                            <option value="nrm">NRM</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Filter by Branch</label>
+                        <select class="form-select" id="branchFilter">
+                            <option value="">All Branches</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Filter by Drive Health</label>
+                        <select class="form-select" id="driveFilter">
+                            <option value="">All Drives</option>
+                            <option value="healthy">Healthy</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="form-label">Filter by Antivirus</label>
+                        <select class="form-select" id="antivirusFilter">
+                            <option value="">All Status</option>
+                            <option value="installed">Installed & Working</option>
+                            <option value="not-installed">Not Installed</option>
+                            <option value="not-working">Not Working</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search by server name...">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-grid">
+                        <button class="btn btn-outline-secondary" id="resetFilters">
+                            <i class="fas fa-redo me-1"></i> Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Server Survey Results</span>
+                <div>
+                    <span class="badge bg-primary me-2" id="filteredCount">0</span>
+                    <span>servers</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Server Name</th>
+                                <th>Company</th>
+                                <th>Branch</th>
+                                <th>Drive Health</th>
+                                <th>UPS Status</th>
+                                <th>Antivirus</th>
+                                <th>Last Updated</th>
+                                <th class="no-print">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="serverTableBody">
+                            <!-- Server data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Dashboard -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Issues Dashboard</span>
+                <div class="form-check form-switch no-print">
+                    <input class="form-check-input" type="checkbox" id="showResolvedIssues">
+                    <label class="form-check-label" for="showResolvedIssues">Show Resolved</label>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row" id="issuesDashboard">
+                    <!-- Issues will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- History Records -->
+        <div class="card mt-4 no-print">
+            <div class="card-header">
+                <span>Survey History</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Server Name</th>
+                                <th>Drive Health</th>
+                                <th>UPS Status</th>
+                                <th>Antivirus</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- History data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Server Modal -->
+    <div class="modal fade" id="serverModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add New Server Survey</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="serverForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Company</label>
+                                    <select class="form-select" id="company" required>
+                                        <option value="">Select Company</option>
+                                        <option value="balmain">Balmain</option>
+                                        <option value="norich">Norich</option>
+                                        <option value="nrm">NRM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Branch</label>
+                                    <select class="form-select" id="branch" required>
+                                        <option value="">Select Branch</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Server Name</label>
+                            <input type="text" class="form-control" id="serverName" required>
+                        </div>
+                        
+                        <!-- Drive Health Section -->
+                        <div class="drive-health-container">
+                            <h6>Drive Health</h6>
+                            <div class="drive-row">
+                                <div class="drive-label">C:</div>
+                                <div class="drive-progress">
+                                    <input type="range" class="form-range drive-slider" id="driveC" min="0" max="100" value="100">
+                                </div>
+                                <div class="drive-status">
+                                    <span class="status-badge status-good" id="driveCStatus">100%</span>
+                                </div>
+                            </div>
+                            <div class="drive-row">
+                                <div class="drive-label">D:</div>
+                                <div class="drive-progress">
+                                    <input type="range" class="form-range drive-slider" id="driveD" min="0" max="100" value="100">
+                                </div>
+                                <div class="drive-status">
+                                    <span class="status-badge status-good" id="driveDStatus">100%</span>
+                                </div>
+                            </div>
+                            <div class="drive-row">
+                                <div class="drive-label">E:</div>
+                                <div class="drive-progress">
+                                    <input type="range" class="form-range drive-slider" id="driveE" min="0" max="100" value="100">
+                                </div>
+                                <div class="drive-status">
+                                    <span class="status-badge status-good" id="driveEStatus">100%</span>
+                                </div>
+                            </div>
+                            <div class="drive-row">
+                                <div class="drive-label">F:</div>
+                                <div class="drive-progress">
+                                    <input type="range" class="form-range drive-slider" id="driveF" min="0" max="100" value="100">
+                                </div>
+                                <div class="drive-status">
+                                    <span class="status-badge status-good" id="driveFStatus">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">UPS Status</label>
+                                    <select class="form-select" id="upsStatus" required>
+                                        <option value="">Select Status</option>
+                                        <option value="working">Working</option>
+                                        <option value="not-working">Not Working</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Antivirus Status</label>
+                                    <select class="form-select" id="antivirusStatus" required>
+                                        <option value="">Select Status</option>
+                                        <option value="installed">Installed & Working</option>
+                                        <option value="not-installed">Not Installed</option>
+                                        <option value="not-working">Not Working</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comments</label>
+                            <textarea class="form-control" id="comments" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveServer">Save Survey</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Header (only visible when printing) -->
+    <div class="print-only">
+        <div class="text-center mb-4">
+            <h1>SERVER SURVEY REPORT</h1>
+            <p>Generated on: <span id="printDate"></span></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Data structure for companies and branches
+        const companies = {
+            balmain: ["Chivhu", "Gokwe", "Graniteside", "Gweru", "Kadoma", "Kwekwe"],
+            norich: ["Bindura", "Bulawayo", "Chinhoyi", "Karoi", "Marondera", "Rusape"],
+            nrm: [
+                "Beitbridge", "Bradburn", "Checheche", "Chiredzi CC", "Chiredzi Hardware", 
+                "Chiredzi Wholesale", "Chipinge HW", "Chipinge WS", "Chivi", "Hurudza", 
+                "Jerera", "Masvingo CC", "Masvingo Hardware", "Masvingo Wholesale", 
+                "Mpandawana", "Nyika", "Zvishavane"
+            ]
+        };
+
+        // Sample data for demonstration
+        let servers = JSON.parse(localStorage.getItem('serverSurveyData')) || [
+            {
+                id: 1,
+                serverName: "SRV-BAL-001",
+                company: "balmain",
+                branch: "Gweru",
+                driveHealth: {
+                    c: 85,
+                    d: 90,
+                    e: 75,
+                    f: 95
+                },
+                upsStatus: "working",
+                antivirusStatus: "installed",
+                comments: "All systems functioning normally.",
+                lastUpdated: "2023-05-15",
+                issues: []
+            },
+            {
+                id: 2,
+                serverName: "SRV-NOR-002",
+                company: "norich",
+                branch: "Bulawayo",
+                driveHealth: {
+                    c: 45,
+                    d: 60,
+                    e: 30,
+                    f: 80
+                },
+                upsStatus: "not-working",
+                antivirusStatus: "not-working",
+                comments: "UPS needs replacement. Antivirus definitions outdated.",
+                lastUpdated: "2023-05-14",
+                issues: ["UPS not working", "Antivirus not working", "Drive E: health critical"]
+            },
+            {
+                id: 3,
+                serverName: "SRV-NRM-003",
+                company: "nrm",
+                branch: "Masvingo CC",
+                driveHealth: {
+                    c: 15,
+                    d: 40,
+                    e: 25,
+                    f: 70
+                },
+                upsStatus: "working",
+                antivirusStatus: "not-installed",
+                comments: "Drive failure imminent. No antivirus installed.",
+                lastUpdated: "2023-05-13",
+                issues: ["Drive C: health critical", "Drive E: health critical", "Antivirus not installed"]
+            }
+        ];
+
+        // History records
+        let history = JSON.parse(localStorage.getItem('serverSurveyHistory')) || [];
+
+        // DOM elements
+        const serverTableBody = document.getElementById('serverTableBody');
+        const historyTableBody = document.getElementById('historyTableBody');
+        const issuesDashboard = document.getElementById('issuesDashboard');
+        const companyFilter = document.getElementById('companyFilter');
+        const branchFilter = document.getElementById('branchFilter');
+        const driveFilter = document.getElementById('driveFilter');
+        const antivirusFilter = document.getElementById('antivirusFilter');
+        const searchInput = document.getElementById('searchInput');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const addServerBtn = document.getElementById('addServerBtn');
+        const printReportBtn = document.getElementById('printReport');
+        const serverModal = new bootstrap.Modal(document.getElementById('serverModal'));
+        const serverForm = document.getElementById('serverForm');
+        const saveServerBtn = document.getElementById('saveServer');
+        const companySelect = document.getElementById('company');
+        const branchSelect = document.getElementById('branch');
+        const totalServersEl = document.getElementById('totalServers');
+        const healthyServersEl = document.getElementById('healthyServers');
+        const warningServersEl = document.getElementById('warningServers');
+        const criticalServersEl = document.getElementById('criticalServers');
+        const filteredCountEl = document.getElementById('filteredCount');
+        const showResolvedIssues = document.getElementById('showResolvedIssues');
+        const totalServersCard = document.getElementById('totalServersCard');
+        const healthyServersCard = document.getElementById('healthyServersCard');
+        const warningServersCard = document.getElementById('warningServersCard');
+        const criticalServersCard = document.getElementById('criticalServersCard');
+
+        // Initialize the application
+        function init() {
+            renderServerTable();
+            renderHistoryTable();
+            updateDashboardStats();
+            updateIssuesDashboard();
+            setupEventListeners();
+            populateBranchOptions();
+            setupDriveSliders();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            companyFilter.addEventListener('change', filterServers);
+            branchFilter.addEventListener('change', filterServers);
+            driveFilter.addEventListener('change', filterServers);
+            antivirusFilter.addEventListener('change', filterServers);
+            searchInput.addEventListener('input', filterServers);
+            resetFiltersBtn.addEventListener('click', resetFilters);
+            addServerBtn.addEventListener('click', showAddServerModal);
+            saveServerBtn.addEventListener('click', saveServer);
+            printReportBtn.addEventListener('click', printReport);
+            companySelect.addEventListener('change', updateBranchOptions);
+            showResolvedIssues.addEventListener('change', updateIssuesDashboard);
+            
+            // Stats card click events for filtering
+            totalServersCard.addEventListener('click', () => resetFilters());
+            healthyServersCard.addEventListener('click', () => filterByStatus('healthy'));
+            warningServersCard.addEventListener('click', () => filterByStatus('warning'));
+            criticalServersCard.addEventListener('click', () => filterByStatus('critical'));
+        }
+
+        // Setup drive sliders
+        function setupDriveSliders() {
+            const sliders = document.querySelectorAll('.drive-slider');
+            sliders.forEach(slider => {
+                slider.addEventListener('input', function() {
+                    const driveLetter = this.id.replace('drive', '');
+                    const statusElement = document.getElementById(`${this.id}Status`);
+                    const value = this.value;
+                    
+                    statusElement.textContent = `${value}%`;
+                    
+                    // Update status class based on value
+                    statusElement.className = 'status-badge ' + getDriveStatusClass(value);
+                });
+            });
+        }
+
+        // Populate branch options based on selected company
+        function populateBranchOptions() {
+            const company = companySelect.value;
+            branchSelect.innerHTML = '<option value="">Select Branch</option>';
+            
+            if (company && companies[company]) {
+                companies[company].forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    option.textContent = branch;
+                    branchSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Update branch options when company changes
+        function updateBranchOptions() {
+            populateBranchOptions();
+            
+            // Also update branch filter
+            const company = companyFilter.value;
+            branchFilter.innerHTML = '<option value="">All Branches</option>';
+            
+            if (company && companies[company]) {
+                companies[company].forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    option.textContent = branch;
+                    branchFilter.appendChild(option);
+                });
+            }
+        }
+
+        // Render server table
+        function renderServerTable(serversToRender = servers) {
+            serverTableBody.innerHTML = '';
+            
+            if (serversToRender.length === 0) {
+                serverTableBody.innerHTML = '<tr><td colspan="8" class="text-center">No servers found matching your criteria</td></tr>';
+                return;
+            }
+            
+            serversToRender.forEach(server => {
+                const serverStatus = getServerStatus(server);
+                const upsStatusClass = server.upsStatus === 'working' ? 'status-good' : 'status-danger';
+                const antivirusStatusClass = getAntivirusStatusClass(server.antivirusStatus);
+                
+                const row = document.createElement('tr');
+                row.className = getServerRowClass(server);
+                row.innerHTML = `
+                    <td>${server.serverName}</td>
+                    <td>${formatCompanyName(server.company)}</td>
+                    <td>${server.branch}</td>
+                    <td>
+                        <div class="drive-health-mini">
+                            <div class="d-flex mb-1">
+                                <small class="me-2">C: ${server.driveHealth.c}%</small>
+                                <small class="me-2">D: ${server.driveHealth.d}%</small>
+                            </div>
+                            <div class="d-flex">
+                                <small class="me-2">E: ${server.driveHealth.e}%</small>
+                                <small class="me-2">F: ${server.driveHealth.f}%</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${upsStatusClass}">
+                            <i class="fas ${server.upsStatus === 'working' ? 'fa-check' : 'fa-times'} me-1"></i>
+                            ${server.upsStatus === 'working' ? 'Working' : 'Not Working'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${antivirusStatusClass}">
+                            ${formatAntivirusStatus(server.antivirusStatus)}
+                        </span>
+                    </td>
+                    <td>${server.lastUpdated}</td>
+                    <td class="no-print">
+                        <button class="btn btn-sm btn-outline-primary edit-server" data-id="${server.id}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-server" data-id="${server.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                serverTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-server').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const serverId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    editServer(serverId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-server').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const serverId = parseInt(e.currentTarget.getAttribute('data-id'));
+                    deleteServer(serverId);
+                });
+            });
+            
+            filteredCountEl.textContent = serversToRender.length;
+        }
+
+        // Render history table
+        function renderHistoryTable() {
+            historyTableBody.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyTableBody.innerHTML = '<tr><td colspan="6" class="text-center">No history records found</td></tr>';
+                return;
+            }
+            
+            // Sort history by date (newest first)
+            const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedHistory.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${record.serverName}</td>
+                    <td>
+                        <div class="drive-health-mini">
+                            <div class="d-flex mb-1">
+                                <small class="me-2">C: ${record.driveHealth.c}%</small>
+                                <small class="me-2">D: ${record.driveHealth.d}%</small>
+                            </div>
+                            <div class="d-flex">
+                                <small class="me-2">E: ${record.driveHealth.e}%</small>
+                                <small class="me-2">F: ${record.driveHealth.f}%</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${record.upsStatus === 'working' ? 'status-good' : 'status-danger'}">
+                            ${record.upsStatus === 'working' ? 'Working' : 'Not Working'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${getAntivirusStatusClass(record.antivirusStatus)}">
+                            ${formatAntivirusStatus(record.antivirusStatus)}
+                        </span>
+                    </td>
+                    <td>${record.comments || 'No comments'}</td>
+                `;
+                historyTableBody.appendChild(row);
+            });
+        }
+
+        // Update dashboard statistics
+        function updateDashboardStats() {
+            totalServersEl.textContent = servers.length;
+            
+            let healthyCount = 0;
+            let warningCount = 0;
+            let criticalCount = 0;
+            
+            servers.forEach(server => {
+                const status = getServerStatus(server);
+                if (status === 'healthy') healthyCount++;
+                else if (status === 'warning') warningCount++;
+                else if (status === 'critical') criticalCount++;
+            });
+            
+            healthyServersEl.textContent = healthyCount;
+            warningServersEl.textContent = warningCount;
+            criticalServersEl.textContent = criticalCount;
+        }
+
+        // Update issues dashboard
+        function updateIssuesDashboard() {
+            issuesDashboard.innerHTML = '';
+            
+            const showResolved = showResolvedIssues.checked;
+            let allIssues = [];
+            
+            servers.forEach(server => {
+                const serverStatus = getServerStatus(server);
+                
+                // Only show issues for servers with warnings or critical status
+                if (serverStatus === 'healthy') return;
+                
+                // Get current issues
+                const currentIssues = getServerIssues(server);
+                
+                // Add server info to each issue
+                currentIssues.forEach(issue => {
+                    allIssues.push({
+                        server: server.serverName,
+                        branch: server.branch,
+                        company: server.company,
+                        issue: issue,
+                        date: server.lastUpdated,
+                        resolved: false
+                    });
+                });
+                
+                // Check if there are resolved issues (issues that were present in history but not now)
+                if (showResolved) {
+                    const serverHistory = history.filter(h => h.serverName === server.serverName)
+                        .sort((a, b) => new Date(b.date) - new Date(a.date));
+                    
+                    if (serverHistory.length > 1) {
+                        const previousRecord = serverHistory[1]; // Get the previous record
+                        const previousIssues = getServerIssues(previousRecord);
+                        
+                        // Find issues that were present before but not now
+                        previousIssues.forEach(issue => {
+                            if (!currentIssues.includes(issue)) {
+                                allIssues.push({
+                                    server: server.serverName,
+                                    branch: server.branch,
+                                    company: server.company,
+                                    issue: issue,
+                                    date: server.lastUpdated,
+                                    resolved: true
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+            
+            if (allIssues.length === 0) {
+                issuesDashboard.innerHTML = `
+                    <div class="col-12 text-center py-4">
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <h4>No Issues Found</h4>
+                        <p class="text-muted">All servers are operating within acceptable parameters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by date (newest first) and then by server name
+            allIssues.sort((a, b) => {
+                if (a.date !== b.date) {
+                    return new Date(b.date) - new Date(a.date);
+                }
+                return a.server.localeCompare(b.server);
+            });
+            
+            // Create issues list
+            const issuesList = document.createElement('div');
+            issuesList.className = 'col-12 issues-list';
+            
+            allIssues.forEach(issue => {
+                const issueItem = document.createElement('div');
+                issueItem.className = `issue-item ${issue.resolved ? 'resolved' : ''}`;
+                issueItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6>${issue.server} <small class="text-muted">- ${issue.branch} (${formatCompanyName(issue.company)})</small></h6>
+                            <p class="mb-1">${issue.issue}</p>
+                            <small class="text-muted">Reported: ${issue.date}</small>
+                        </div>
+                        <div>
+                            ${issue.resolved ? 
+                                '<span class="badge bg-success">Resolved</span>' : 
+                                '<span class="badge bg-danger">Active</span>'
+                            }
+                        </div>
+                    </div>
+                `;
+                issuesList.appendChild(issueItem);
+            });
+            
+            issuesDashboard.appendChild(issuesList);
+        }
+
+        // Filter servers based on selected criteria
+        function filterServers() {
+            const company = companyFilter.value;
+            const branch = branchFilter.value;
+            const driveHealth = driveFilter.value;
+            const antivirus = antivirusFilter.value;
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            let filteredServers = servers.filter(server => {
+                // Filter by company
+                if (company && server.company !== company) return false;
+                
+                // Filter by branch
+                if (branch && server.branch !== branch) return false;
+                
+                // Filter by drive health
+                if (driveHealth) {
+                    const status = getServerStatus(server);
+                    if (driveHealth !== status) return false;
+                }
+                
+                // Filter by antivirus
+                if (antivirus && server.antivirusStatus !== antivirus) return false;
+                
+                // Filter by search term
+                if (searchTerm && !server.serverName.toLowerCase().includes(searchTerm)) return false;
+                
+                return true;
+            });
+            
+            renderServerTable(filteredServers);
+        }
+
+        // Filter by status (used when clicking on stats cards)
+        function filterByStatus(status) {
+            driveFilter.value = status;
+            filterServers();
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            companyFilter.value = '';
+            branchFilter.value = '';
+            driveFilter.value = '';
+            antivirusFilter.value = '';
+            searchInput.value = '';
+            filterServers();
+        }
+
+        // Show add server modal
+        function showAddServerModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Server Survey';
+            serverForm.reset();
+            
+            // Reset drive sliders to 100%
+            document.getElementById('driveC').value = 100;
+            document.getElementById('driveD').value = 100;
+            document.getElementById('driveE').value = 100;
+            document.getElementById('driveF').value = 100;
+            
+            // Update status displays
+            document.getElementById('driveCStatus').textContent = '100%';
+            document.getElementById('driveDStatus').textContent = '100%';
+            document.getElementById('driveEStatus').textContent = '100%';
+            document.getElementById('driveFStatus').textContent = '100%';
+            
+            document.getElementById('driveCStatus').className = 'status-badge status-good';
+            document.getElementById('driveDStatus').className = 'status-badge status-good';
+            document.getElementById('driveEStatus').className = 'status-badge status-good';
+            document.getElementById('driveFStatus').className = 'status-badge status-good';
+            
+            serverModal.show();
+        }
+
+        // Edit server
+        function editServer(id) {
+            const server = servers.find(s => s.id === id);
+            if (!server) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Server Survey';
+            document.getElementById('serverName').value = server.serverName;
+            document.getElementById('company').value = server.company;
+            populateBranchOptions();
+            document.getElementById('branch').value = server.branch;
+            document.getElementById('upsStatus').value = server.upsStatus;
+            document.getElementById('antivirusStatus').value = server.antivirusStatus;
+            document.getElementById('comments').value = server.comments;
+            
+            // Set drive values
+            document.getElementById('driveC').value = server.driveHealth.c;
+            document.getElementById('driveD').value = server.driveHealth.d;
+            document.getElementById('driveE').value = server.driveHealth.e;
+            document.getElementById('driveF').value = server.driveHealth.f;
+            
+            // Update status displays
+            document.getElementById('driveCStatus').textContent = `${server.driveHealth.c}%`;
+            document.getElementById('driveDStatus').textContent = `${server.driveHealth.d}%`;
+            document.getElementById('driveEStatus').textContent = `${server.driveHealth.e}%`;
+            document.getElementById('driveFStatus').textContent = `${server.driveHealth.f}%`;
+            
+            document.getElementById('driveCStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.c);
+            document.getElementById('driveDStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.d);
+            document.getElementById('driveEStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.e);
+            document.getElementById('driveFStatus').className = 'status-badge ' + getDriveStatusClass(server.driveHealth.f);
+            
+            // Store the ID for updating
+            serverForm.setAttribute('data-edit-id', id);
+            serverModal.show();
+        }
+
+        // Save server (add or update)
+        function saveServer() {
+            if (!serverForm.checkValidity()) {
+                serverForm.reportValidity();
+                return;
+            }
+            
+            const serverName = document.getElementById('serverName').value;
+            const company = document.getElementById('company').value;
+            const branch = document.getElementById('branch').value;
+            const driveHealth = {
+                c: parseInt(document.getElementById('driveC').value),
+                d: parseInt(document.getElementById('driveD').value),
+                e: parseInt(document.getElementById('driveE').value),
+                f: parseInt(document.getElementById('driveF').value)
+            };
+            const upsStatus = document.getElementById('upsStatus').value;
+            const antivirusStatus = document.getElementById('antivirusStatus').value;
+            const comments = document.getElementById('comments').value;
+            
+            const editId = serverForm.getAttribute('data-edit-id');
+            
+            if (editId) {
+                // Update existing server
+                const index = servers.findIndex(s => s.id === parseInt(editId));
+                if (index !== -1) {
+                    // Determine current issues before update
+                    const oldIssues = getServerIssues(servers[index]);
+                    
+                    servers[index] = {
+                        ...servers[index],
+                        serverName,
+                        company,
+                        branch,
+                        driveHealth,
+                        upsStatus,
+                        antivirusStatus,
+                        comments,
+                        lastUpdated: new Date().toISOString().split('T')[0]
+                    };
+                    
+                    // Determine new issues after update
+                    const newIssues = getServerIssues(servers[index]);
+                    
+                    // Add to history
+                    history.push({
+                        serverName,
+                        company,
+                        branch,
+                        driveHealth,
+                        upsStatus,
+                        antivirusStatus,
+                        comments,
+                        date: new Date().toISOString().split('T')[0],
+                        resolvedIssues: oldIssues.filter(issue => !newIssues.includes(issue)),
+                        newIssues: newIssues.filter(issue => !oldIssues.includes(issue))
+                    });
+                }
+            } else {
+                // Add new server
+                const newId = servers.length > 0 ? Math.max(...servers.map(s => s.id)) + 1 : 1;
+                const newServer = {
+                    id: newId,
+                    serverName,
+                    company,
+                    branch,
+                    driveHealth,
+                    upsStatus,
+                    antivirusStatus,
+                    comments,
+                    lastUpdated: new Date().toISOString().split('T')[0]
+                };
+                
+                servers.push(newServer);
+                
+                // Add to history
+                history.push({
+                    serverName,
+                    company,
+                    branch,
+                    driveHealth,
+                    upsStatus,
+                    antivirusStatus,
+                    comments,
+                    date: new Date().toISOString().split('T')[0],
+                    newIssues: getServerIssues(newServer)
+                });
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('serverSurveyData', JSON.stringify(servers));
+            localStorage.setItem('serverSurveyHistory', JSON.stringify(history));
+            
+            // Update UI
+            renderServerTable();
+            renderHistoryTable();
+            updateDashboardStats();
+            updateIssuesDashboard();
+            filterServers();
+            
+            // Close modal
+            serverModal.hide();
+            serverForm.removeAttribute('data-edit-id');
+        }
+
+        // Delete server
+        function deleteServer(id) {
+            if (confirm('Are you sure you want to delete this server survey?')) {
+                servers = servers.filter(s => s.id !== id);
+                
+                // Save to localStorage
+                localStorage.setItem('serverSurveyData', JSON.stringify(servers));
+                
+                // Update UI
+                renderServerTable();
+                updateDashboardStats();
+                updateIssuesDashboard();
+                filterServers();
+            }
+        }
+
+        // Print report
+        function printReport() {
+            document.getElementById('printDate').textContent = new Date().toLocaleDateString();
+            window.print();
+        }
+
+        // Helper functions
+        function getDriveStatusClass(health) {
+            if (health >= 70) return 'status-good';
+            if (health >= 30) return 'status-warning';
+            return 'status-danger';
+        }
+
+        function getDriveStatus(health) {
+            if (health >= 70) return 'healthy';
+            if (health >= 30) return 'warning';
+            return 'critical';
+        }
+
+        function getServerStatus(server) {
+            // Check drive health
+            const drives = Object.values(server.driveHealth);
+            const criticalDrives = drives.filter(health => getDriveStatus(health) === 'critical').length;
+            const warningDrives = drives.filter(health => getDriveStatus(health) === 'warning').length;
+            
+            // Check other components
+            const upsCritical = server.upsStatus === 'not-working';
+            const antivirusCritical = server.antivirusStatus === 'not-installed';
+            const antivirusWarning = server.antivirusStatus === 'not-working';
+            
+            // Determine overall status
+            if (criticalDrives > 0 || upsCritical || antivirusCritical) {
+                return 'critical';
+            } else if (warningDrives > 0 || antivirusWarning) {
+                return 'warning';
+            } else {
+                return 'healthy';
+            }
+        }
+
+        function getServerIssues(server) {
+            const issues = [];
+            
+            // Check drives
+            Object.entries(server.driveHealth).forEach(([drive, health]) => {
+                const status = getDriveStatus(health);
+                if (status === 'critical') {
+                    issues.push(`Drive ${drive.toUpperCase()}: health critical (${health}%)`);
+                } else if (status === 'warning') {
+                    issues.push(`Drive ${drive.toUpperCase()}: health warning (${health}%)`);
+                }
+            });
+            
+            // Check UPS
+            if (server.upsStatus === 'not-working') {
+                issues.push('UPS not working');
+            }
+            
+            // Check antivirus
+            if (server.antivirusStatus === 'not-installed') {
+                issues.push('Antivirus not installed');
+            } else if (server.antivirusStatus === 'not-working') {
+                issues.push('Antivirus not working');
+            }
+            
+            return issues;
+        }
+
+        function getAntivirusStatusClass(status) {
+            switch(status) {
+                case 'installed': return 'status-good';
+                case 'not-working': return 'status-warning';
+                case 'not-installed': return 'status-danger';
+                default: return '';
+            }
+        }
+
+        function formatAntivirusStatus(status) {
+            switch(status) {
+                case 'installed': return 'Installed & Working';
+                case 'not-working': return 'Not Working';
+                case 'not-installed': return 'Not Installed';
+                default: return status;
+            }
+        }
+
+        function formatCompanyName(company) {
+            return company.charAt(0).toUpperCase() + company.slice(1);
+        }
+
+        function getServerRowClass(server) {
+            const status = getServerStatus(server);
+            
+            if (status === 'critical') {
+                return 'table-danger';
+            } else if (status === 'warning') {
+                return 'table-warning';
+            }
+            
+            return '';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
