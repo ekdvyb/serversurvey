@@ -21,6 +21,7 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 20px;
         }
         
         .dashboard-header {
@@ -110,7 +111,7 @@
         }
         
         .stats-number {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
             margin: 10px 0;
         }
@@ -242,6 +243,100 @@
             margin-top: 2px;
         }
         
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+        
+        .action-buttons .btn {
+            white-space: nowrap;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .dashboard-header .container .row {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .dashboard-header .text-end {
+                text-align: center !important;
+                margin-top: 15px;
+            }
+            
+            .stats-card {
+                padding: 15px 10px;
+            }
+            
+            .stats-number {
+                font-size: 1.5rem;
+            }
+            
+            .filter-section .row > div {
+                margin-bottom: 10px;
+            }
+            
+            .drive-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .drive-input {
+                margin: 10px 0;
+                width: 100%;
+            }
+            
+            .drive-status {
+                width: 100%;
+                text-align: left;
+                margin-top: 5px;
+            }
+            
+            .table th, .table td {
+                padding: 8px 5px;
+                font-size: 0.85rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .history-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .btn {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+            
+            .card-header {
+                padding: 10px 15px;
+            }
+            
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .drive-health-mini .d-flex {
+                flex-direction: column;
+            }
+            
+            .drive-health-mini .me-2 {
+                margin-right: 0 !important;
+                margin-bottom: 2px;
+            }
+        }
+        
         @media print {
             .no-print {
                 display: none !important;
@@ -268,15 +363,17 @@
                     <p class="mb-0">Comprehensive server health monitoring and reporting</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <button class="btn btn-light me-2 no-print" id="printReport">
-                        <i class="fas fa-print me-1"></i> Print Report
-                    </button>
-                    <button class="btn btn-light me-2 no-print" id="exportPDF">
-                        <i class="fas fa-file-pdf me-1"></i> Export PDF
-                    </button>
-                    <button class="btn btn-light no-print" id="addServerBtn">
-                        <i class="fas fa-plus me-1"></i> Add Server
-                    </button>
+                    <div class="d-flex flex-wrap justify-content-md-end justify-content-center gap-2">
+                        <button class="btn btn-light no-print" id="printReport">
+                            <i class="fas fa-print me-1"></i> Print
+                        </button>
+                        <button class="btn btn-light no-print" id="exportPDF">
+                            <i class="fas fa-file-pdf me-1"></i> PDF
+                        </button>
+                        <button class="btn btn-light no-print" id="addServerBtn">
+                            <i class="fas fa-plus me-1"></i> Add Server
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -285,25 +382,25 @@
     <div class="container">
         <!-- Stats Overview -->
         <div class="row mb-4">
-            <div class="col-md-3">
+            <div class="col-md-3 col-6 mb-3">
                 <div class="card stats-card" id="totalServersCard">
                     <div class="stats-number text-primary" id="totalServers">0</div>
                     <div class="stats-label">Total Servers</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6 mb-3">
                 <div class="card stats-card" id="healthyServersCard">
                     <div class="stats-number text-success" id="healthyServers">0</div>
                     <div class="stats-label">Healthy Servers</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6 mb-3">
                 <div class="card stats-card" id="warningServersCard">
                     <div class="stats-number text-warning" id="warningServers">0</div>
-                    <div class="stats-label">Servers with Warnings</div>
+                    <div class="stats-label">Warning Servers</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 col-6 mb-3">
                 <div class="card stats-card" id="criticalServersCard">
                     <div class="stats-number text-danger" id="criticalServers">0</div>
                     <div class="stats-label">Critical Servers</div>
@@ -314,9 +411,9 @@
         <!-- Filters and Search -->
         <div class="filter-section no-print">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-lg-3 col-md-6 mb-3">
                     <div class="mb-3">
-                        <label class="form-label">Filter by Company</label>
+                        <label class="form-label">Company</label>
                         <select class="form-select" id="companyFilter">
                             <option value="">All Companies</option>
                             <option value="balmain">Balmain</option>
@@ -325,17 +422,17 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-lg-3 col-md-6 mb-3">
                     <div class="mb-3">
-                        <label class="form-label">Filter by Branch</label>
+                        <label class="form-label">Branch</label>
                         <select class="form-select" id="branchFilter">
                             <option value="">All Branches</option>
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-lg-3 col-md-6 mb-3">
                     <div class="mb-3">
-                        <label class="form-label">Filter by Drive Health</label>
+                        <label class="form-label">Drive Health</label>
                         <select class="form-select" id="driveFilter">
                             <option value="">All Drives</option>
                             <option value="healthy">Healthy</option>
@@ -344,9 +441,9 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-lg-3 col-md-6 mb-3">
                     <div class="mb-3">
-                        <label class="form-label">Filter by Antivirus</label>
+                        <label class="form-label">Antivirus</label>
                         <select class="form-select" id="antivirusFilter">
                             <option value="">All Status</option>
                             <option value="installed">Installed & Working</option>
@@ -357,7 +454,7 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-8 mb-3">
                     <div class="search-box">
                         <i class="fas fa-search"></i>
                         <input type="text" class="form-control" id="searchInput" placeholder="Search by server model or identifier...">
@@ -375,9 +472,9 @@
 
         <!-- Server List -->
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <span>Server Survey Results</span>
-                <div>
+                <div class="d-flex align-items-center mt-2 mt-md-0">
                     <span class="badge bg-primary me-2" id="filteredCount">0</span>
                     <span>servers</span>
                 </div>
@@ -409,9 +506,9 @@
 
         <!-- Issues Dashboard -->
         <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <span>Issues Dashboard</span>
-                <div class="form-check form-switch no-print">
+                <div class="form-check form-switch no-print mt-2 mt-md-0">
                     <input class="form-check-input" type="checkbox" id="showResolvedIssues">
                     <label class="form-check-label" for="showResolvedIssues">Show Resolved</label>
                 </div>
@@ -425,9 +522,9 @@
 
         <!-- History Records -->
         <div class="card mt-4 no-print">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <span>Survey History</span>
-                <div class="history-actions">
+                <div class="history-actions mt-2 mt-md-0">
                     <span class="badge bg-secondary me-2" id="historyCount">0 records</span>
                     <button class="btn btn-sm btn-outline-danger" id="resetHistoryBtn">
                         <i class="fas fa-trash me-1"></i> Reset History
@@ -1004,12 +1101,14 @@
                     </td>
                     <td>${server.lastUpdated}</td>
                     <td class="no-print">
-                        <button class="btn btn-sm btn-outline-primary edit-server" data-id="${server.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger delete-server" data-id="${server.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-outline-primary edit-server" data-id="${server.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger delete-server" data-id="${server.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
                 serverTableBody.appendChild(row);
